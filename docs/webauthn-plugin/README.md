@@ -15,6 +15,7 @@
 4. [WebAuthn-Implementierungsplan](04-webauthn-implementierung.md)
 5. [Datenbankschema](05-datenbankschema.md)
 6. [Migrations-Strategie (Plugin → Core)](06-migration-strategie.md)
+7. [Plugin-API Allgemein & Plugin-Ideen-Katalog](07-plugin-api-allgemein.md)
 
 ---
 
@@ -60,5 +61,6 @@ docs/webauthn-plugin/
 ├── 03-mfa-subsystem.md              ← MFA-Subsystem im Detail
 ├── 04-webauthn-implementierung.md   ← Implementierungsplan & Code-Gerüst
 ├── 05-datenbankschema.md            ← SQL-Schema für Credentials
-└── 06-migration-strategie.md        ← Weg von Plugin zu Core
+├── 06-migration-strategie.md        ← Weg von Plugin zu Core
+└── 07-plugin-api-allgemein.md       ← Plugin-API allgemein & Plugin-Ideen-Katalog
 ```
