@@ -1,11 +1,4 @@
-/**
- * Handles Google reCaptcha.
- *
- * @author Olaf Braun
- * @copyright 2001-2024 WoltLab GmbH
- * @license GNU Lesser General Public License <http://opensource.org/licenses/lgpl-license.php>
- * @since 6.2
- */
+/// <reference types="grecaptcha" />
 define(["require", "exports", "WoltLabSuite/Core/Controller/Captcha"], function (require, exports, Captcha_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -85,7 +78,7 @@ define(["require", "exports", "WoltLabSuite/Core/Controller/Captcha"], function 
             }
             else {
                 const form = this.#container.closest("form");
-                const submitButton = form.querySelector("input[type=submit]");
+                const submitButton = form.querySelector("input[type=submit], button[type=submit]");
                 const listener = (event) => {
                     event.preventDefault();
                     submitButton.disabled = true;

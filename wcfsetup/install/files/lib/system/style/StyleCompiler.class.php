@@ -3,6 +3,7 @@
 namespace wcf\system\style;
 
 use ScssPhp\ScssPhp\Compiler;
+use ScssPhp\ScssPhp\Deprecation;
 use ScssPhp\ScssPhp\Exception\SassException;
 use ScssPhp\ScssPhp\OutputStyle;
 use ScssPhp\ScssPhp\ValueConverter;
@@ -70,6 +71,7 @@ final class StyleCompiler extends SingletonFactory
     private function makeCompiler(): Compiler
     {
         $compiler = new Compiler();
+        $compiler->setSilenceDeprecations([Deprecation::mixedDecls]);
         $compiler->setImportPaths([WCF_DIR]);
 
         if (\ENABLE_DEBUG_MODE && \ENABLE_DEVELOPER_TOOLS) {
@@ -175,7 +177,7 @@ final class StyleCompiler extends SingletonFactory
             $files[] = $customCustomSCSSFile;
         }
 
-        $scss = "/*!\n\nstylesheet for '" . $styleName . "', generated on " . \gmdate('r') . " -- DO NOT EDIT\n\n*/\n";
+        $scss = "/*!\n\nstylesheet for '" . \str_replace(['*', '/'], '', $styleName) . "', generated on " . \gmdate('r') . " -- DO NOT EDIT\n\n*/\n";
         $scss .= $this->bootstrap($variables);
         foreach ($files as $file) {
             $scss .= $this->prepareFile($file);
@@ -303,7 +305,7 @@ final class StyleCompiler extends SingletonFactory
         $parameters = ['scss' => ''];
         EventHandler::getInstance()->fireAction($this, 'compile', $parameters);
 
-        $scss = "/*!\n\nstylesheet for '" . $style->styleName . "', generated on " . \gmdate('r') . " -- DO NOT EDIT\n\n*/\n";
+        $scss = "/*!\n\nstylesheet for '" . \str_replace(['*', '/'], '', $style->styleName) . "', generated on " . \gmdate('r') . " -- DO NOT EDIT\n\n*/\n";
         $scss .= $this->bootstrap($variables);
         foreach ($this->getFiles() as $file) {
             $scss .= $this->prepareFile($file);
@@ -400,6 +402,12 @@ final class StyleCompiler extends SingletonFactory
                 return $parameter;
             }, $parameters);
             [$filename, $as, $crossorigin, $type] = $parameters;
+
+            // The values are used to build HTTP header values, they must not be
+            // able to inject additional headers.
+            if (\preg_match('~[\r\n]~', $filename . $as . $type)) {
+                continue;
+            }
 
             yield [
                 'filename' => $filename,
@@ -556,7 +564,7 @@ final class StyleCompiler extends SingletonFactory
             $variables,
             static function (string $value, string $key) use (&$darkModeVariables, $prefixLength) {
                 if (\str_starts_with($key, Style::DARK_MODE_PREFIX)) {
-                    if (\str_starts_with($value, 'rgba(')) {
+                    if (\preg_match('~^rgba\( *\d{1,3} *, *\d{1,3} *, *\d{1,3} *, *(?:1(?:\.0+)?|0?\.\d+|0|\d{1,3}%) *\)\z~', $value)) {
                         $darkModeVariables[\substr($key, $prefixLength)] = $value;
                     }
 
@@ -647,7 +655,7 @@ final class StyleCompiler extends SingletonFactory
             $variables['wcfFontFamily'] = self::SYSTEM_FONT_FAMILY;
         }
 
-        if (!empty($variables['wcfFontFamilyGoogle'])) {
+        if (!empty($variables['wcfFontFamilyGoogle']) && FontManager::isValidFamily($variables['wcfFontFamilyGoogle'])) {
             $variables['wcfFontFamily'] = \sprintf(
                 '"%s", %s',
                 $variables['wcfFontFamilyGoogle'],
@@ -705,6 +713,7 @@ final class StyleCompiler extends SingletonFactory
      */
     private function compileStylesheet(string $scss, array $variables): string
     {
+        $variables = \array_filter($variables, static fn($value) => $value !== null);
         $compiler = $this->makeCompiler();
         $compiler->replaceVariables(\array_map(static function ($value) {
             if ($value === "" || \is_int($value)) {
@@ -717,6 +726,14 @@ final class StyleCompiler extends SingletonFactory
                 if (\str_contains($e->getMessage(), 'Sass modules are not implemented yet')) {
                     return ValueConverter::fromPhp($value);
                 }
+
+                // The SCSS compiler is unable to process urls like for the page
+                // logo thus these must be presented as plain strings.
+                if (\is_string($value)) {
+                    return ValueConverter::fromPhp($value);
+                }
+
+                throw $e;
             }
         }, $variables));
 
@@ -778,12 +795,12 @@ final class StyleCompiler extends SingletonFactory
             return '';
         }
 
-        $cssFile = FontManager::getInstance()->getCssFilename($font);
-        if (!\is_readable($cssFile)) {
+        $fontManager = FontManager::getInstance();
+        if (!$fontManager->isFamilyDownloaded($font)) {
             return '';
         }
 
-        return \file_get_contents($cssFile);
+        return \file_get_contents($fontManager->getCssFilename($font));
     }
 
     /**
@@ -806,6 +823,13 @@ final class StyleCompiler extends SingletonFactory
             }
 
             if (\in_array($key, $skipVariables)) {
+                continue;
+            }
+
+            // The value is emitted verbatim, therefore it must not be able to
+            // terminate the declaration or the surrounding block. Rejecting `{`
+            // also rules out the SCSS interpolation `#{…}`.
+            if (\preg_match('~[;{}]~', $value)) {
                 continue;
             }
 

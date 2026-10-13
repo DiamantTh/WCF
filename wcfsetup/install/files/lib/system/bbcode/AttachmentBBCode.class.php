@@ -50,12 +50,12 @@ final class AttachmentBBCode extends AbstractBBCode
                 $openingTag['attributes'],
                 $hasParentLink,
             );
+        } elseif (!$attachment->canDownload()) {
+            return ContentNotVisibleView::forNoPermission();
         } elseif (\substr($attachment->fileType, 0, 6) === 'video/' && $outputType == 'text/html') {
             return $this->showVideoPlayer($attachment);
         } elseif (\substr($attachment->fileType, 0, 6) === 'audio/' && $outputType == 'text/html') {
             return $this->showAudioPlayer($attachment);
-        } elseif (!$attachment->canDownload()) {
-            return ContentNotVisibleView::forNoPermission();
         }
 
         return StringUtil::getAnchorTag($attachment->getLink(), $attachment->filename);
@@ -88,7 +88,7 @@ final class AttachmentBBCode extends AbstractBBCode
         $title = StringUtil::encodeHTML($attachment->filename);
         $imageElement = \sprintf(
             '<img src="%s" width="%d" height="%d" alt="" loading="lazy">',
-            $attachment->getFullSizeImageSource(),
+            StringUtil::encodeHTML($attachment->getFullSizeImageSource()),
             $attachment->width,
             $attachment->height,
         );
@@ -145,7 +145,7 @@ final class AttachmentBBCode extends AbstractBBCode
 
         $imageClasses = '';
         if (!$attachment->hasThumbnail()) {
-            $imageClasses = 'embeddedAttachmentLink jsResizeImage';
+            $imageClasses = 'embeddedAttachmentLink';
         }
 
         if ($class && (!$attachment->hasThumbnail() || !$attachment->canDownload())) {
@@ -225,7 +225,8 @@ final class AttachmentBBCode extends AbstractBBCode
         }
 
         // Force the use of the thumbnail if the user cannot access the full version.
-        if (!$thumbnail && !$attachment->canDownload()) {
+        // An explicit width must never be able to opt out of this.
+        if (!$attachment->canDownload()) {
             $isThumbnail = true;
             if ($width !== "auto" && $width > $attachment->thumbnailWidth) {
                 $width = "auto";

@@ -150,9 +150,9 @@ class UiReactionHandler {
    */
   _initReactButton(element: HTMLElement, elementData: ElementData): void {
     if (this._options.isSingleItem) {
-      elementData.reactButton = document.querySelector(this._options.buttonSelector) as HTMLElement;
+      elementData.reactButton = document.querySelector(this._options.buttonSelector);
     } else {
-      elementData.reactButton = element.querySelector(this._options.buttonSelector) as HTMLElement;
+      elementData.reactButton = element.querySelector(this._options.buttonSelector);
     }
 
     if (elementData.reactButton === null) {
@@ -163,8 +163,10 @@ class UiReactionHandler {
     if (availableReactions.length === 1) {
       const reaction = availableReactions[0];
       elementData.reactButton.title = reaction.title;
-      const textSpan = elementData.reactButton.querySelector(".invisible")!;
-      textSpan.textContent = reaction.title;
+      const textSpan = elementData.reactButton.querySelector(".invisible");
+      if (textSpan !== null) {
+        textSpan.textContent = reaction.title;
+      }
     }
 
     elementData.reactButton.setAttribute("role", "button");
@@ -356,7 +358,7 @@ class UiReactionHandler {
 
         const reactionTypeItemSpan = document.createElement("span");
         reactionTypeItemSpan.className = "reactionTypeButtonTitle";
-        reactionTypeItemSpan.innerHTML = reactionType.title;
+        reactionTypeItemSpan.textContent = reactionType.title;
 
         reactionTypeItem.innerHTML = reactionType.renderedIcon;
 

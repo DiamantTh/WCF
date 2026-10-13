@@ -2,7 +2,6 @@
 
 namespace wcf\command\style;
 
-use wcf\data\page\PageCache;
 use wcf\data\style\Style;
 use wcf\system\io\AtomicWriter;
 use wcf\system\language\LanguageFactory;
@@ -26,9 +25,8 @@ final class CreateManifest
     public function __invoke(): void
     {
         $this->style->loadVariables();
-        $headerColor = $this->style->getVariable('wcfHeaderBackground', true);
-        $backgroundColor = $this->style->getVariable('wcfContentBackground', true);
-        $landingPage = PageCache::getInstance()->getLandingPage();
+        $headerColor = \json_encode((string)$this->style->getVariable('wcfHeaderBackground', true), \JSON_THROW_ON_ERROR);
+        $backgroundColor = \json_encode((string)$this->style->getVariable('wcfContentBackground', true), \JSON_THROW_ON_ERROR);
 
         $icons = [];
         foreach ([192, 256, 512] as $iconSize) {
@@ -52,16 +50,14 @@ final class CreateManifest
                 WCF::setLanguage($language->languageID);
 
                 $title = JSON::encode($language->get(PAGE_TITLE));
-                $startUrl = JSON::encode($landingPage->getLink());
 
                 // update manifest.json
                 $manifest = <<<MANIFEST
                 {
                     "name": {$title},
-                    "start_url": {$startUrl},
                     "icons": {$icons},
-                    "theme_color": "{$headerColor}",
-                    "background_color": "{$backgroundColor}",
+                    "theme_color": {$headerColor},
+                    "background_color": {$backgroundColor},
                     "display": "standalone"
                 }
                 MANIFEST;

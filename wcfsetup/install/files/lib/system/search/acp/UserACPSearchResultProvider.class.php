@@ -27,16 +27,17 @@ class UserACPSearchResultProvider implements IACPSearchResultProvider
         }
 
         $conditionBuilder = new PreparedStatementConditionBuilder(true, 'OR');
-        $conditionBuilder->add("username LIKE ?", [[$query . '%']]);
+        $conditionBuilder->add("username LIKE ?", [[WCF::getDB()->escapeLikeValue($query) . '%']]);
 
         if (WCF::getSession()->getPermission('admin.user.canEditMailAddress')) {
-            $conditionBuilder->add("email LIKE ?", [[$query . '%']]);
+            $conditionBuilder->add("email LIKE ?", [[WCF::getDB()->escapeLikeValue($query) . '%']]);
         }
 
-        $sql = "SELECT  *
-                FROM    wcf1_user
-                {$conditionBuilder}";
-        $statement = WCF::getDB()->prepare($sql);
+        $sql = "SELECT      *
+                FROM        wcf1_user
+                {$conditionBuilder}
+                ORDER BY    username";
+        $statement = WCF::getDB()->prepare($sql, 50);
         $statement->execute($conditionBuilder->getParameters());
 
         $results = [];
@@ -46,6 +47,10 @@ class UserACPSearchResultProvider implements IACPSearchResultProvider
                 $results[] = new ACPSearchResult($user->username, LinkHandler::getInstance()->getLink('UserEdit', [
                     'object' => $user,
                 ]));
+
+                if (\count($results) === 10) {
+                    break;
+                }
             }
         }
 

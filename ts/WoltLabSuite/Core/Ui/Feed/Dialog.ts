@@ -35,7 +35,7 @@ function openDialog(event: Event): void {
   const alternative = event.currentTarget as HTMLAnchorElement;
   const linkWithAccessToken = alternative.href;
 
-  const linkWithoutAccessToken = linkWithAccessToken.replace(/(\\?|&)at=[^&]*&?/, "$1").replace(/(\?|&)$/, "");
+  const linkWithoutAccessToken = linkWithAccessToken.replace(/(\?|&)at=[^&]*&?/, "$1").replace(/(\?|&)$/, "");
 
   UiDialog.openStatic(
     "feedLinkDialog",
@@ -63,7 +63,7 @@ function openDialog(event: Event): void {
         "wcf.global.rss.copy",
       )}">
         <fa-icon name="copy"></fa-icon>
-      </a>
+      </button>
     </div>
   </dd>
 </dl>

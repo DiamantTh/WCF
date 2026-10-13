@@ -79,7 +79,7 @@ if (\function_exists('mb_regex_encoding')) {
 \mb_language('uni');
 
 // define current woltlab suite version
-\define('WCF_VERSION', '6.2.3');
+\define('WCF_VERSION', '6.2.8');
 
 // define current unix timestamp
 \define('TIME_NOW', \time());
@@ -527,7 +527,7 @@ class WCF
      */
     protected function resolveActiveApplication(): void
     {
-        if (!isset($_GET['__rewrittenPath']) || \defined('PACKAGE_ID')) {
+        if (!isset($_GET['__rewrittenPath']) || !\is_string($_GET['__rewrittenPath']) || \defined('PACKAGE_ID')) {
             if (!\defined('PACKAGE_ID')) {
                 \define('PACKAGE_ID', 1);
             }

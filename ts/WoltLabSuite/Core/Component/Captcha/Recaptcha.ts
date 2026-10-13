@@ -1,3 +1,5 @@
+/// <reference types="grecaptcha" />
+
 /**
  * Handles Google reCaptcha.
  *
@@ -102,7 +104,9 @@ export class Recaptcha {
       });
     } else {
       const form = this.#container.closest("form")!;
-      const submitButton = form.querySelector<HTMLInputElement>("input[type=submit]")!;
+      const submitButton = form.querySelector<HTMLInputElement | HTMLButtonElement>(
+        "input[type=submit], button[type=submit]",
+      )!;
 
       const listener = (event: Event) => {
         event.preventDefault();

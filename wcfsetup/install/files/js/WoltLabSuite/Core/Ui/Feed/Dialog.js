@@ -30,7 +30,7 @@ define(["require", "exports", "tslib", "../Dialog", "../../StringUtil", "../../L
         event.preventDefault();
         const alternative = event.currentTarget;
         const linkWithAccessToken = alternative.href;
-        const linkWithoutAccessToken = linkWithAccessToken.replace(/(\\?|&)at=[^&]*&?/, "$1").replace(/(\?|&)$/, "");
+        const linkWithoutAccessToken = linkWithAccessToken.replace(/(\?|&)at=[^&]*&?/, "$1").replace(/(\?|&)$/, "");
         Dialog_1.default.openStatic("feedLinkDialog", `
 <woltlab-core-notice type="info">${Language.get("wcf.global.rss.accessToken.info")}</woltlab-core-notice>
 <dl>
@@ -51,7 +51,7 @@ define(["require", "exports", "tslib", "../Dialog", "../../StringUtil", "../../L
       <input type="text" class="long" readonly value="${StringUtil.escapeHTML(linkWithAccessToken)}">
       <button type="button" class="inputSuffix button jsTooltip feedLinkDialogCopyButton" title="${Language.get("wcf.global.rss.copy")}">
         <fa-icon name="copy"></fa-icon>
-      </a>
+      </button>
     </div>
   </dd>
 </dl>

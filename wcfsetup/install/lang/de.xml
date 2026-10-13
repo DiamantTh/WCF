@@ -1097,6 +1097,7 @@ Sie erreichen das Fehlerprotokoll unter: {link controller='ExceptionLogView' isE
 		<item name="wcf.acp.license.package.outdated"><![CDATA[Bis Version {$accessibleVersion}]]></item>
 		<item name="wcf.acp.license.package.version"><![CDATA[Version]]></item>
 		<item name="wcf.acp.license.error.parsingFailed"><![CDATA[Die Lizenzdaten konnten nicht abgerufen werden. Bitte <a href="{link controller="LicenseEdit"}{/link}">{if LANGUAGE_USE_INFORMAL_VARIANT}kontrolliere und aktualisiere{else}kontrollieren und aktualisieren Sie{/if} die Lizenzdaten</a>.{if $licenseData !== null}<br><br>Der letzte erfolgreiche Abruf der Lizenzinformationen erfolgte am {time type='plainTime' time=$licenseData->creationDate}.{/if}]]></item>
+		<item name="wcf.acp.license.error.upgradeOverrideEnabled"><![CDATA[Die lizenzierten Produkte können nicht angezeigt werden, solange das Upgrade auf die nächste Version aktiv ist.]]></item>
 	</category>
 	<category name="wcf.acp.menu">
 		<item name="wcf.acp.menu.link.management"><![CDATA[Verwaltung]]></item>
@@ -2539,7 +2540,6 @@ Die Datenbestände werden sorgfältig gepflegt, aber es ist nicht ausgeschlossen
 		<item name="wcf.acp.pip.objectType.integerCondition.propertyName.description"><![CDATA[Name der Objekteigenschaft und Spalte der <kbd>{$tableName}</kbd>-Datenbanktabelle, der für diese Bedingung verwendet wird.]]></item>
 		<item name="wcf.acp.pip.objectType.integerCondition.propertyName.error.noIntegerColumn"><![CDATA[Die angegebene Spalte der Datenbanktabelle <kbd>{$tableName}</kbd> ist keine Spalte vom Typ <kbd>INT</kbd>.]]></item>
 		<item name="wcf.acp.pip.objectType.integerCondition.propertyName.error.nonExistent"><![CDATA[Die angegebene Spalte existiert nicht in der Datenbanktabelle <kbd>{$tableName}</kbd>.]]></item>
-		<item name="wcf.acp.pip.menuItem.additionalInternalURL"><![CDATA[Zusätzliche interne URL-Parameter]]></item>
 		<item name="wcf.acp.pip.menuItem.externalURL"><![CDATA[Externe URL]]></item>
 		<item name="wcf.acp.pip.menuItem.externalURL.description"><![CDATA[Wenn der Benutzer auf den Menüpunkt klickt, wird er auf die angegebene Website weitergeleitet.]]></item>
 		<item name="wcf.acp.pip.menuItem.identifier"><![CDATA[Bezeichner des Menüpunktes]]></item>
@@ -2555,6 +2555,8 @@ Die Datenbestände werden sorgfältig gepflegt, aber es ist nicht ausgeschlossen
 		<item name="wcf.acp.pip.menuItem.page.description"><![CDATA[Der Menüpunkt wird auf die ausgewähle Seite verlinken.]]></item>
 		<item name="wcf.acp.pip.menuItem.parentMenuItem"><![CDATA[Übergeordneter Menüpunkt]]></item>
 		<item name="wcf.acp.pip.menuItem.showOrder.description"><![CDATA[Der angegebene Wert bestimmt in welcher Reihenfolge die Menüpunkte mit dem gleichen übergeordneten Menüpunkt angezeigt werden.]]></item>
+		<item name="wcf.acp.pip.menuItem.urlParameters"><![CDATA[Zusätzliche URL-Parameter]]></item>
+		<item name="wcf.acp.pip.menuItem.urlParameters.description"><![CDATA[Die angegebenen Parameter werden an die URL der ausgewählten Seite angehängt, zum Beispiel <kbd>foo=bar&amp;baz=1</kbd>.]]></item>
 		<item name="wcf.acp.pip.box.boxType"><![CDATA[Boy-Typ]]></item>
 		<item name="wcf.acp.pip.box.boxType.description"><![CDATA[Der Inhalt von „text“-Boxen können vom Administrator mit dem eingebauten WYSIWYG-Editor bearbeitet werden. „html“-Boxen erlaubten zusätzlich HTML-Code und „tpl“-Boxen auch Template Scripting. Der Inhalt von „system“-Boxen kann nicht vom Administrator bearbeitet werden, da ihr Inhalt vom Box-Controller bereitgestellt wird.]]></item>
 		<item name="wcf.acp.pip.box.content"><![CDATA[Inhalte]]></item>
@@ -3149,6 +3151,7 @@ Abschnitte dürfen nicht leer sein und nur folgende Zeichen enthalten: <kbd>[a-z
 		<item name="wcf.acp.user.option.labeledUrl"><![CDATA[URL]]></item>
 		<item name="wcf.acp.user.option.labeledUrl.description"><![CDATA[Wenn der Feldtyp „labeledUrl“ ist, muss hier die URL hinterlegt werden, auf die verlinkt werden soll. {if LANGUAGE_USE_INFORMAL_VARIANT}Nutze{else}Nutzen Sie{/if} <span class="inlineCode">%s</span> als Platzhalter für die Eingabe des Benutzers.]]></item>
 		<item name="wcf.acp.user.option.labeledUrl.error.invalid"><![CDATA[Der Platzhalter <span class="inlineCode">%s</span> fehlt in der URL.]]></item>
+		<item name="wcf.acp.user.option.labeledUrl.error.invalidScheme"><![CDATA[Die URL muss mit <span class="inlineCode">http://</span> oder <span class="inlineCode">https://</span> beginnen.]]></item>
 		<item name="wcf.acp.user.option.optionType"><![CDATA[Feldtyp]]></item>
 		<item name="wcf.acp.user.option.optionType.description"><![CDATA[Die Namen entsprechen in der Regel den HTML-Elementen, die benötigt werden, um so ein Feld beim Benutzer abzufragen.]]></item>
 		<item name="wcf.acp.user.option.askDuringRegistration"><![CDATA[Das Feld wird im Registrierungs-Formular angezeigt.]]></item>
@@ -5222,6 +5225,7 @@ Sobald {if LANGUAGE_USE_INFORMAL_VARIANT}dein{else}Ihr{/if} Benutzerkonto freige
 		<item name="wcf.user.3rdparty.login.error.httpError"><![CDATA[Die Kommunikation mit dem externen Dienst ist fehlgeschlagen. Interner Fehlercode: <code>{$exceptionID}</code>.]]></item>
 		<item name="wcf.user.3rdparty.login.error.genericException"><![CDATA[Bei der Verarbeitung der Anfrage ist ein Fehler aufgetreten. Bitte {if LANGUAGE_USE_INFORMAL_VARIANT}wende dich{else}wenden Sie sich{/if} an den Administrator. Interner Fehlercode: <code>{$exceptionID}</code>.]]></item>
 		<item name="wcf.user.3rdparty.login.error.stateValidation"><![CDATA[Die Anfrage konnte nicht zugeordnet werden. Möglicherweise ist {if LANGUAGE_USE_INFORMAL_VARIANT}deine{else}Ihre{/if} Sitzung abgelaufen.]]></item>
+		<item name="wcf.user.3rdparty.login.error.unknownError"><![CDATA[Der externe Dienst hat einen Fehler gemeldet, der nicht verstanden werden konnte: <kbd>{$errorCode}</kbd>]]></item>
 		<item name="wcf.user.3rdparty.github"><![CDATA[GitHub]]></item>
 		<item name="wcf.user.3rdparty.github.login"><![CDATA[Mit GitHub anmelden]]></item>
 		<item name="wcf.user.3rdparty.github.register"><![CDATA[{if LANGUAGE_USE_INFORMAL_VARIANT}Du erstellst{else}Sie erstellen{/if} ein Benutzerkonto über {icon size='16' name='github' type='brand'}&nbsp;GitHub. Der Benutzername und {if LANGUAGE_USE_INFORMAL_VARIANT}deine{else}Ihre{/if} E-Mail-Adresse wurden daher bereits ausgefüllt.]]></item>

@@ -2,8 +2,6 @@
 
 namespace wcf\system\background\job;
 
-use BadMethodCallException;
-use LogicException;
 use Psr\Http\Message\ResponseInterface;
 use wcf\data\file\File;
 use wcf\data\unfurl\url\UnfurlUrl;
@@ -164,13 +162,31 @@ final class UnfurlUrlBackgroundJob extends AbstractBackgroundJob
                 $image
             );
 
+            // The remote dimensions are the fallback, because the image is
+            // served through the proxy or from the external source whenever the
+            // thumbnail could not be created. Storing `0` for both would make
+            // the image appear as a squared preview.
+            $width = $imageData[0];
+            $height = $imageData[1];
+            if ($file !== null) {
+                $thumbnailData = \getimagesizefromstring(
+                    \base64_decode(
+                        \file_get_contents($file->getPathname())
+                    )
+                );
+                if ($thumbnailData !== false) {
+                    $width = $thumbnailData[0];
+                    $height = $thumbnailData[1];
+                }
+            }
+
             return [
                 'imageUrl' => $unfurlResponse->getImageUrl(),
                 'imageUrlHash' => \sha1($unfurlResponse->getImageUrl()),
                 'fileID' => $file?->fileID,
                 'isStored' => $file !== null ? 1 : 0,
-                'width' => $imageData[0],
-                'height' => $imageData[1],
+                'width' => $width,
+                'height' => $height,
             ];
         } catch (UrlInaccessible | DownloadFailed $e) {
             return [];
@@ -295,7 +311,7 @@ final class UnfurlUrlBackgroundJob extends AbstractBackgroundJob
         }
 
         if ($imageID !== null && !empty($imageData)) {
-            throw new BadMethodCallException("You cannot pass an imageID and imageData at the same time.");
+            throw new \BadMethodCallException("You cannot pass an imageID and imageData at the same time.");
         }
 
         $urlAction = new UnfurlUrlAction([$this->urlID], 'update', [

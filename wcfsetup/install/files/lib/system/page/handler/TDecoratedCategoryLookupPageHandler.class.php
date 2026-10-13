@@ -10,6 +10,7 @@ use wcf\system\database\util\PreparedStatementConditionBuilder;
 use wcf\system\exception\ImplementationException;
 use wcf\system\exception\ParentClassException;
 use wcf\system\WCF;
+use wcf\util\StringUtil;
 
 /**
  * Provides the `isValid` and `lookup` methods for looking up decorated categories.
@@ -110,7 +111,7 @@ trait TDecoratedCategoryLookupPageHandler
         );
         $conditionBuilder->add(
             '(category.title LIKE ? OR language_item.languageItemValue LIKE ?)',
-            ['%' . $searchString . '%', '%' . $searchString . '%']
+            ['%' . WCF::getDB()->escapeLikeValue($searchString) . '%', '%' . WCF::getDB()->escapeLikeValue($searchString) . '%']
         );
         $sql = "SELECT      DISTINCT categoryID
                 FROM        wcf1_category category
@@ -128,7 +129,7 @@ trait TDecoratedCategoryLookupPageHandler
             // build hierarchy
             $description = '';
             foreach ($category->getParentCategories() as $parentCategory) {
-                $description .= $parentCategory->getTitle() . ' &raquo; ';
+                $description .= StringUtil::encodeHTML($parentCategory->getTitle()) . ' &raquo; ';
             }
 
             $results[] = [

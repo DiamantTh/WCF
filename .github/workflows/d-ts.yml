@@ -16,12 +16,13 @@ jobs:
         - '6.0'
         - '6.1'
         - '6.2'
+        - '6.3'
     steps:
     - run: |
         sudo apt-get install -y \
           jq \
           moreutils
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         ref: ${{ matrix.branch }}
     - name: Determine commit
@@ -29,12 +30,12 @@ jobs:
       run: |
         echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     - name: Set up node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: "18"
+        node-version: "24"
         cache: "npm"
     - run: npm install
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: WoltLab/d.ts
         ssh-key: ${{ secrets.WOLTLAB_D_TS_DEPLOY_KEY }}

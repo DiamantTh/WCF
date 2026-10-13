@@ -148,40 +148,53 @@ abstract class AbstractHtmlNodeProcessor implements IHtmlNodeProcessor
         $html = \preg_replace('~</body>$~', '', $html);
 
         foreach ($this->nodeData as $data) {
-            $html = \preg_replace_callback(
-                '~<wcfNode-' . $data['identifier'] . '>(?P<content>[\s\S]*)</wcfNode-' . $data['identifier'] . '>~',
-                static function ($matches) use ($data) {
-                    /** @var IHtmlNode $obj */
-                    $obj = $data['object'];
-                    $string = $obj->replaceTag($data['data']);
+            // Locate the tags using plain string functions, a regex with a
+            // greedy match would backtrack across the remainder of the HTML
+            // and hits the backtracking limit for large payloads, for example
+            // an unfurled link with an image embedded as a data url.
+            $openingTag = '<wcfNode-' . $data['identifier'] . '>';
+            $closingTag = '</wcfNode-' . $data['identifier'] . '>';
 
-                    // @phpstan-ignore function.alreadyNarrowedType, function.alreadyNarrowedType, booleanAnd.alwaysFalse
-                    if (!\is_string($string) && !\is_numeric($string)) {
-                        throw new \RuntimeException(
-                            \sprintf(
-                                "%s::replaceTag() returned %s but a string or number was expected.",
-                                \get_class($obj),
-                                \gettype($string),
-                            ),
-                        );
-                    }
+            $start = \strpos($html, $openingTag);
+            if ($start === false) {
+                continue;
+            }
 
-                    if (!isset($data['data']['skipInnerContent']) || $data['data']['skipInnerContent'] !== true) {
-                        if (\str_contains($string, '<!-- META_CODE_INNER_CONTENT -->')) {
-                            return \str_replace('<!-- META_CODE_INNER_CONTENT -->', $matches['content'], $string);
-                        } elseif (\str_contains($string, '&lt;!-- META_CODE_INNER_CONTENT --&gt;')) {
-                            return \str_replace(
-                                '&lt;!-- META_CODE_INNER_CONTENT --&gt;',
-                                $matches['content'],
-                                $string
-                            );
-                        }
-                    }
+            $contentStart = $start + \strlen($openingTag);
+            $end = \strrpos($html, $closingTag, $contentStart);
+            if ($end === false) {
+                continue;
+            }
 
-                    return $string;
-                },
-                $html
-            );
+            /** @var IHtmlNode $obj */
+            $obj = $data['object'];
+            $string = $obj->replaceTag($data['data']);
+
+            // @phpstan-ignore function.alreadyNarrowedType, function.alreadyNarrowedType, booleanAnd.alwaysFalse
+            if (!\is_string($string) && !\is_numeric($string)) {
+                throw new \RuntimeException(
+                    \sprintf(
+                        "%s::replaceTag() returned %s but a string or number was expected.",
+                        \get_class($obj),
+                        \gettype($string),
+                    ),
+                );
+            }
+
+            if (!isset($data['data']['skipInnerContent']) || $data['data']['skipInnerContent'] !== true) {
+                // The HTML encoded representation of the placeholder must not be
+                // recognized, it is indistinguishable from untrusted input that
+                // `replaceTag()` has correctly escaped.
+                if (\str_contains($string, '<!-- META_CODE_INNER_CONTENT -->')) {
+                    $string = \str_replace(
+                        '<!-- META_CODE_INNER_CONTENT -->',
+                        \substr($html, $contentStart, $end - $contentStart),
+                        $string
+                    );
+                }
+            }
+
+            $html = \substr_replace($html, $string, $start, $end + \strlen($closingTag) - $start);
         }
 
         // work-around for a libxml bug that causes a single space between
@@ -302,7 +315,7 @@ abstract class AbstractHtmlNodeProcessor implements IHtmlNodeProcessor
      * Parses an attribute string.
      *
      * @param string $attributes base64 and JSON encoded attributes
-     * @return array<string|int, string|int|bool|null> parsed attributes
+     * @return array<string|int, string|int|float|bool|null> parsed attributes
      */
     public function parseAttributes($attributes)
     {
@@ -314,6 +327,20 @@ abstract class AbstractHtmlNodeProcessor implements IHtmlNodeProcessor
                 } catch (\JsonException) {
                     /* parse errors can occur if user provided malicious content - ignore them */
                     $parsedAttributes = [];
+                }
+
+                // Enforce the attributes to be a list containing nothing but
+                // scalar values plus null.
+                if (!\is_array($parsedAttributes) || !\array_is_list($parsedAttributes)) {
+                    $parsedAttributes = [];
+                } else {
+                    foreach ($parsedAttributes as $attribute) {
+                        if ($attribute !== null && !\is_scalar($attribute)) {
+                            $parsedAttributes = [];
+
+                            break;
+                        }
+                    }
                 }
 
                 return $parsedAttributes;

@@ -152,7 +152,21 @@ final class FileProcessor extends SingletonFactory
         return $fileProcessor->canAdopt($file, $context);
     }
 
+    #[\NoDiscard("as the file itself could change")]
     public function generateWebpVariant(File $file): File
+    {
+        $newFile = $this->createWebpVariant($file);
+
+        // The processor may have stored the pathname of the WebP variant in
+        // a denormalized form, notify it whenever the variant changes.
+        if ($newFile->fileHashWebp !== $file->fileHashWebp) {
+            $newFile->getProcessor()?->sourceFilenameChanged($newFile);
+        }
+
+        return $newFile;
+    }
+
+    private function createWebpVariant(File $file): File
     {
         $canGenerateThumbnail = match ($file->mimeType) {
             'image/jpeg', 'image/png' => true,
@@ -161,6 +175,11 @@ final class FileProcessor extends SingletonFactory
 
         if (!$canGenerateThumbnail) {
             if ($file->fileHashWebp !== null) {
+                $pathname = $file->getPathnameWebp();
+                \assert($pathname !== null);
+
+                @\unlink($pathname);
+
                 (new FileEditor($file))->update([
                     'fileHashWebp' => null,
                 ]);
@@ -355,8 +374,7 @@ final class FileProcessor extends SingletonFactory
      */
     public function hasReachedUploadLimit(IFileProcessor $fileProcessor, array $context): bool
     {
-        $isReplacement = $context['__replace'] ?? false;
-        if ($isReplacement || $fileProcessor->isSingleFile()) {
+        if ($fileProcessor->isSingleFile()) {
             return false;
         }
 
@@ -368,6 +386,16 @@ final class FileProcessor extends SingletonFactory
         $maximumCount = $fileProcessor->getMaximumCount($context);
         if ($maximumCount === null) {
             return false;
+        }
+
+        // The client announces a replacement so that the file being replaced,
+        // which is still present at this point, does not occupy the last slot.
+        // This claim cannot be verified, therefore it grants a single extra
+        // slot instead of lifting the limit. The limit is re-evaluated against
+        // the persisted count on every upload, capping the abuse of this flag
+        // at one file in total.
+        if ($context['__replace'] ?? false) {
+            $maximumCount++;
         }
 
         $sql = "SELECT  COUNT(*)
@@ -454,7 +482,7 @@ final class FileProcessor extends SingletonFactory
                 // The files identity differs if the file has been replaced.
                 if ($file !== $newFile) {
                     $processor = $newFile->getProcessor();
-                    $processor?->replacedWithWebpVariant($newFile);
+                    $processor?->sourceFilenameChanged($newFile);
                 }
 
                 return $newFile;
@@ -478,6 +506,12 @@ final class FileProcessor extends SingletonFactory
 
         $command = new ReplaceFileSource($file, $fileWithoutExif, $file->filename, false);
         $newFile = $command();
+
+        // Stripping the EXIF data changes the checksum and thus the pathname
+        // of the file, any denormalized copy of the pathname must be updated.
+        if ($newFile->fileHash !== $file->fileHash) {
+            $newFile->getProcessor()?->sourceFilenameChanged($newFile);
+        }
 
         return $newFile;
     }

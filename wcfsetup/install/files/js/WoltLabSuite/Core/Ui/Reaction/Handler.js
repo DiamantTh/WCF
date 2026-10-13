@@ -100,7 +100,9 @@ define(["require", "exports", "tslib", "../../Ajax", "../../Core", "../../Dom/Ch
                 const reaction = availableReactions[0];
                 elementData.reactButton.title = reaction.title;
                 const textSpan = elementData.reactButton.querySelector(".invisible");
-                textSpan.textContent = reaction.title;
+                if (textSpan !== null) {
+                    textSpan.textContent = reaction.title;
+                }
             }
             elementData.reactButton.setAttribute("role", "button");
             if (availableReactions.length > 1) {
@@ -266,7 +268,7 @@ define(["require", "exports", "tslib", "../../Ajax", "../../Core", "../../Dom/Ch
                     reactionTypeItem.title = reactionType.title;
                     const reactionTypeItemSpan = document.createElement("span");
                     reactionTypeItemSpan.className = "reactionTypeButtonTitle";
-                    reactionTypeItemSpan.innerHTML = reactionType.title;
+                    reactionTypeItemSpan.textContent = reactionType.title;
                     reactionTypeItem.innerHTML = reactionType.renderedIcon;
                     reactionTypeItem.appendChild(reactionTypeItemSpan);
                     reactionTypeItem.addEventListener("click", () => this._react(reactionType.reactionTypeID));

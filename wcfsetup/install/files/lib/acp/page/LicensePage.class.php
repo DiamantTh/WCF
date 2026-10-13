@@ -68,6 +68,12 @@ final class LicensePage extends AbstractPage
     {
         parent::readData();
 
+        if (PackageUpdateServer::isUpgradeOverrideEnabled()) {
+            throw new NamedUserException(HtmlString::fromSafeHtml(
+                WCF::getLanguage()->get('wcf.acp.license.error.upgradeOverrideEnabled')
+            ));
+        }
+
         if (!LicenseApi::hasLicenseCredentials()) {
             return new RedirectResponse(
                 LinkHandler::getInstance()->getControllerLink(
